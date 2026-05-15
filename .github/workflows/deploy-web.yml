@@ -39,9 +39,6 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_APP_NAME: Synastry
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
