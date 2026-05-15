@@ -2,7 +2,7 @@ import type {
   AnalyzeRequest,
   AnalyzeResponse,
   BirthTimeAccuracy,
-} from "@synastry/shared";
+} from "@synastry/contracts";
 
 const SIGNS = [
   "Овен",

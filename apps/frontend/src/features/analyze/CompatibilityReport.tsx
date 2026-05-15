@@ -1,4 +1,4 @@
-import type { AnalyzeResponse } from "@synastry/shared";
+import type { AnalyzeResponse } from "@synastry/contracts";
 
 const verdictLabel: Record<
   AnalyzeResponse["compatibility"]["verdict"],

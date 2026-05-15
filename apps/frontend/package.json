@@ -1,5 +1,5 @@
 {
-  "name": "@synastry/web",
+  "name": "@synastry/frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -15,7 +15,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@reduxjs/toolkit": "^2.11.1",
-    "@synastry/shared": "0.1.0",
+    "@synastry/contracts": "0.1.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.68.0",

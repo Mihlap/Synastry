@@ -3,7 +3,7 @@ import type {
   AnalyzeRequest,
   AnalyzeResponse,
   ProvidersResponse,
-} from "@synastry/shared";
+} from "@synastry/contracts";
 import { apiUrl } from "../lib/env";
 
 export const baseApi = createApi({

@@ -32,8 +32,8 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Build web
-        run: npm run build --workspace @synastry/web
+      - name: Build frontend
+        run: npm run build --workspace @synastry/frontend
         env:
           GITHUB_PAGES: "true"
           VITE_API_URL: ${{ vars.VITE_API_URL }}
@@ -45,7 +45,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/web/dist
+          path: apps/frontend/dist
 
       - name: Deploy
         id: deployment

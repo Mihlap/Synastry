@@ -10,14 +10,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace @synastry/web",
-    "dev:api": "npm run dev --workspace @synastry/api",
-    "dev:web": "npm run dev --workspace @synastry/web",
-    "build": "npm run build --workspace @synastry/shared && npm run build --workspace @synastry/api && npm run build --workspace @synastry/web",
-    "typecheck": "npm run build --workspace @synastry/shared && npm run typecheck --workspace @synastry/api && npm run typecheck --workspace @synastry/web && npm run typecheck --workspace @synastry/shared",
-    "test": "npm run build --workspace @synastry/shared && npm run test --workspace @synastry/shared && npm run test --workspace @synastry/api && npm run test --workspace @synastry/web",
-    "test:run": "npm run build --workspace @synastry/shared && npm run test:run --workspace @synastry/shared && npm run test:run --workspace @synastry/api && npm run test:run --workspace @synastry/web",
-    "lint": "npm run lint --workspace @synastry/shared && npm run lint --workspace @synastry/api && npm run lint --workspace @synastry/web"
+    "dev": "npm run dev --workspace @synastry/frontend",
+    "dev:frontend": "npm run dev --workspace @synastry/frontend",
+    "dev:backend": "npm run dev --workspace @synastry/backend",
+    "build": "npm run build --workspace @synastry/contracts && npm run build --workspace @synastry/backend && npm run build --workspace @synastry/frontend",
+    "typecheck": "npm run build --workspace @synastry/contracts && npm run typecheck --workspace @synastry/backend && npm run typecheck --workspace @synastry/frontend && npm run typecheck --workspace @synastry/contracts",
+    "test": "npm run build --workspace @synastry/contracts && npm run test --workspace @synastry/contracts && npm run test --workspace @synastry/backend && npm run test --workspace @synastry/frontend",
+    "test:run": "npm run build --workspace @synastry/contracts && npm run test:run --workspace @synastry/contracts && npm run test:run --workspace @synastry/backend && npm run test:run --workspace @synastry/frontend",
+    "lint": "npm run lint --workspace @synastry/contracts && npm run lint --workspace @synastry/backend && npm run lint --workspace @synastry/frontend"
   },
   "engines": {
     "node": ">=20"

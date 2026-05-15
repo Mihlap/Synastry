@@ -1,4 +1,4 @@
-import { CompatibilitySchema } from "@synastry/shared";
+import { CompatibilitySchema } from "@synastry/contracts";
 
 export function parseCompatibilityJson(content: string) {
   const trimmed = content.trim();

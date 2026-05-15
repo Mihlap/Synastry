@@ -1,4 +1,4 @@
-import type { AnalyzeRequest, AnalyzeResponse } from "@synastry/shared";
+import type { AnalyzeRequest, AnalyzeResponse } from "@synastry/contracts";
 
 export function buildCompatibilityMessages(
   request: AnalyzeRequest,

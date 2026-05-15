@@ -1,4 +1,4 @@
-import { AnalyzeRequestSchema, type AnalyzeRequest } from "@synastry/shared";
+import { AnalyzeRequestSchema, type AnalyzeRequest } from "@synastry/contracts";
 
 export const defaultAnalyzeValues: AnalyzeRequest = {
   consentAccepted: false,

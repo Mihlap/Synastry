@@ -1,4 +1,4 @@
-import { AnalyzeRequestSchema, AnalyzeResponseSchema } from "@synastry/shared";
+import { AnalyzeRequestSchema, AnalyzeResponseSchema } from "@synastry/contracts";
 import { Router } from "express";
 import { buildNatalChart, getBirthTimeAccuracy } from "../chart/natal-chart.js";
 import { env } from "../config/env.js";

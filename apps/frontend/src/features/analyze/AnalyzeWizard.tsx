@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { AnalyzeRequest, AnalyzeResponse } from "@synastry/shared";
+import type { AnalyzeRequest, AnalyzeResponse } from "@synastry/contracts";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAnalyzeMutation, useGetProvidersQuery } from "../../shared/api/base-api";
