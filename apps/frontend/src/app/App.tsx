@@ -1,55 +1,55 @@
+import { useState } from "react";
 import { AnalyzeWizard } from "../features/analyze/AnalyzeWizard";
-import { appName } from "../shared/lib/env";
+
+const panelClasses =
+  "rounded-[32px] border border-line bg-paper shadow-panel backdrop-blur-[7px] max-sm:rounded-3xl";
+
+const eyebrowClasses =
+  "inline-flex font-ui text-[0.78rem] font-bold tracking-[0.1em] text-salmon-dark uppercase";
+
+const primaryLinkClasses =
+  "inline-flex min-h-[54px] cursor-pointer items-center justify-center rounded-full border border-transparent bg-blue px-8 font-main text-base font-semibold text-white no-underline shadow-[0_14px_28px_rgb(117_187_253/0.26)] transition duration-150 ease-out hover:-translate-y-px hover:bg-blue-dark";
 
 export function App() {
+  const [analyzeSessionKey, setAnalyzeSessionKey] = useState(0);
+
   return (
-    <main className="app-shell">
-      <section className="hero">
-        <div className="hero-copy">
-          <span className="eyebrow">HR astrology intelligence</span>
-          <h1>{appName}: совместимость кандидата и роли без лишней мистики</h1>
-          <p>
-            Приложение берёт данные кандидата, описание компании и вакансии,
-            строит карту в безопасном backend-контуре и отдаёт ИИ только
-            структурированный контекст. Ключи GigaChat остаются на сервере.
+    <main className="mx-auto w-[min(1240px,calc(100%-32px))] px-0 pt-8 pb-14 max-sm:w-[min(calc(100%-20px),1180px)] max-sm:pt-3">
+      <section className="mt-6">
+        <div className={`${panelClasses} relative overflow-hidden p-[clamp(32px,6vw,72px)]`}>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-blue/30 bg-blue/15"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-10 right-[18%] h-28 w-28 rounded-full border border-purple/20 bg-purple/10"
+          />
+          <span className={`${eyebrowClasses} mb-3.5`}>Для HR и рекрутеров</span>
+          <h1 className="relative m-0 max-w-4xl font-accent text-[clamp(2.25rem,5vw,4rem)] leading-[1.12] font-light tracking-tight text-ink">
+            Точный выбор среди сильных
+          </h1>
+          <p className="relative mt-6 max-w-3xl font-main text-lg leading-relaxed text-muted">
+            Профиль кандидата, культура компании и задачи роли — в одном отчёте.
+            Понятно, впишется ли человек в команду, где он силён и о чём поговорить
+            на интервью.
           </p>
-          <div className="hero-actions">
-            <a className="button button-primary" href="#analysis">
+          <div className="relative mt-8 flex flex-col items-start gap-2.5">
+            <a
+              className={`${primaryLinkClasses} w-fit`}
+              href="#analysis"
+              onClick={() => setAnalyzeSessionKey((key) => key + 1)}
+            >
               Начать анализ
             </a>
-            <a className="button button-ghost" href="#security">
-              Как защищены ключи
-            </a>
-          </div>
-        </div>
-        <div className="hero-card" aria-label="Ключевые преимущества">
-          <div>
-            <strong>0</strong>
-            <span>секретов во фронтенде</span>
-          </div>
-          <div>
-            <strong>3</strong>
-            <span>шага до отчёта</span>
-          </div>
-          <div>
-            <strong>API</strong>
-            <span>через BFF и RTK Query</span>
+            <p className="m-0 max-w-md font-main text-[0.8125rem] leading-snug text-muted">
+              При нажатии на кнопку — новая форма и новый отчёт.
+            </p>
           </div>
         </div>
       </section>
 
-      <AnalyzeWizard />
-
-      <section className="security-strip" id="security">
-        <span className="eyebrow">Безопасность</span>
-        <h2>Ключи ИИ не попадают в браузер</h2>
-        <p>
-          Frontend использует только публичный `VITE_API_URL`. `GIGACHAT_*`
-          хранится в окружении API, GitHub Secrets или настройках хостинга.
-          Ответы и ошибки API не раскрывают токены, заголовки авторизации и
-          внутреннюю конфигурацию.
-        </p>
-      </section>
+      <AnalyzeWizard key={analyzeSessionKey} />
     </main>
   );
 }

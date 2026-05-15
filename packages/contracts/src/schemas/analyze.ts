@@ -12,27 +12,70 @@ export const BirthTimeAccuracySchema = z.enum([
   "unknown",
 ]);
 
-export const CandidateSchema = z.object({
-  fullName: z.string().trim().min(2).max(160),
-  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  birthTime: z
+const optionalBirthTimeSchema = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z
     .string()
-    .regex(/^\d{2}:\d{2}$/)
+    .regex(/^\d{2}:\d{2}$/, "Проверьте время: формат ЧЧ:ММ")
     .nullable()
     .optional(),
+);
+
+export const CandidateSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Укажите ФИО кандидата")
+    .min(2, "ФИО слишком короткое — укажите имя и фамилию")
+    .max(160, "Слишком длинное ФИО — не больше 160 символов"),
+  birthDate: z
+    .string()
+    .trim()
+    .min(1, "Укажите дату рождения")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Выберите дату в календаре"),
+  birthTime: optionalBirthTimeSchema,
   birthPlace: z.object({
-    city: z.string().trim().min(2).max(120),
-    latitude: z.number().min(-90).max(90),
-    longitude: z.number().min(-180).max(180),
-    timezone: z.string().trim().min(3).max(80),
+    city: z
+      .string()
+      .trim()
+      .min(1, "Укажите город и регион рождения")
+      .min(2, "Слишком коротко — укажите город и регион или область"),
+    latitude: z.number({
+      error: "Укажите координаты города",
+    }),
+    longitude: z.number({
+      error: "Укажите координаты города",
+    }),
+    timezone: z
+      .string()
+      .trim()
+      .min(3, "Не удалось определить часовой пояс места рождения"),
   }),
-  resumeText: z.string().trim().max(50_000).optional(),
+  resumeText: z
+    .string()
+    .trim()
+    .max(50_000, "Текст резюме слишком длинный")
+    .optional(),
 });
 
 export const VacancySchema = z.object({
-  title: z.string().trim().min(2).max(160),
-  companyDescription: z.string().trim().min(20).max(8_000),
-  jobDescription: z.string().trim().min(20).max(12_000),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Укажите название должности")
+    .min(2, "Название должности слишком короткое"),
+  companyDescription: z
+    .string()
+    .trim()
+    .min(1, "Расскажите о компании — хотя бы в двух словах")
+    .min(20, "Добавьте про компанию: культуру, команду или формат")
+    .max(8_000, "Описание компании слишком длинное"),
+  jobDescription: z
+    .string()
+    .trim()
+    .min(1, "Опишите вакансию — задачи, навыки и ожидания от кандидата")
+    .min(20, "Расширьте описание вакансии — так точнее анализ")
+    .max(12_000, "Описание вакансии слишком длинное"),
 });
 
 export const AnalyzeRequestSchema = z.object({
@@ -45,7 +88,8 @@ export const AnalyzeRequestSchema = z.object({
     })
     .optional(),
   consentAccepted: z.boolean().refine((value) => value, {
-    message: "Нужно согласие на обработку данных",
+    message:
+      "Чтобы получить отчёт, подтвердите согласие на обработку введённых данных",
   }),
 });
 
@@ -73,9 +117,11 @@ export const CompatibilitySchema = z.object({
   verdict: VerdictSchema,
   score: z.number().int().min(0).max(100).optional(),
   summary: z.string(),
-  pros: z.array(z.string()),
-  cons: z.array(z.string()),
-  arguments: z.array(z.string()),
+  pros: z.array(z.string()).min(1),
+  cons: z.array(z.string()).min(1),
+  arguments: z.array(z.string()).optional(),
+  argumentsFor: z.array(z.string()).optional(),
+  argumentsAgainst: z.array(z.string()).optional(),
 });
 
 export const AnalyzeResponseSchema = z.object({

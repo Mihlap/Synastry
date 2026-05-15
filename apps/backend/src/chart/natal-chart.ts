@@ -32,6 +32,21 @@ const BODIES = [
   "Плутон",
 ] as const;
 
+const ELEMENT_BY_SIGN: Record<(typeof SIGNS)[number], string> = {
+  Овен: "Огонь",
+  Лев: "Огонь",
+  Стрелец: "Огонь",
+  Телец: "Земля",
+  Дева: "Земля",
+  Козерог: "Земля",
+  Близнецы: "Воздух",
+  Весы: "Воздух",
+  Водолей: "Воздух",
+  Рак: "Вода",
+  Скорпион: "Вода",
+  Рыбы: "Вода",
+};
+
 const ASPECTS = [
   { type: "соединение", angle: 0, orb: 8 },
   { type: "секстиль", angle: 60, orb: 5 },
@@ -45,7 +60,7 @@ export function buildNatalChart(
 ): AnalyzeResponse["natalChart"] {
   const birthAccuracy = getBirthTimeAccuracy(request);
   const seed = hashCandidate(request);
-  const positions = BODIES.map((body, index) => {
+  const positions: AnalyzeResponse["natalChart"]["positions"] = BODIES.map((body, index) => {
     const longitude = normalize(seed / (index + 3) + index * 37.9);
     return {
       body,
@@ -57,6 +72,16 @@ export function buildNatalChart(
           : ((Math.floor(normalize(longitude + seed / 13) / 30) % 12) + 1),
     };
   });
+
+  if (birthAccuracy !== "unknown") {
+    const ascLongitude = normalize(seed / 7 + 11.5);
+    positions.push({
+      body: "Асцендент",
+      sign: SIGNS[Math.floor(ascLongitude / 30)] ?? "Овен",
+      degree: round(ascLongitude % 30),
+      house: 1,
+    });
+  }
 
   const aspects = positions.flatMap((left, leftIndex) =>
     positions.slice(leftIndex + 1).flatMap((right) => {
@@ -78,14 +103,76 @@ export function buildNatalChart(
     }),
   );
 
+  return {
+    summary: buildNatalSummary(positions, aspects, birthAccuracy),
+    positions,
+    aspects: aspects.slice(0, 10),
+  };
+}
+
+function buildNatalSummary(
+  positions: AnalyzeResponse["natalChart"]["positions"],
+  aspects: AnalyzeResponse["natalChart"]["aspects"],
+  birthAccuracy: BirthTimeAccuracy,
+): string {
   const sun = positions.find((position) => position.body === "Солнце");
   const moon = positions.find((position) => position.body === "Луна");
+  const ascendant = positions.find((position) => position.body === "Асцендент");
+  const elementCounts = countElements(positions);
+  const dominantElement = pickDominantElement(elementCounts);
+  const aspectPreview = aspects
+    .slice(0, 4)
+    .map((aspect) => `${aspect.a} ${aspect.type} ${aspect.b}`)
+    .join("; ");
 
-  return {
-    summary: `Ключевой акцент карты: Солнце в знаке ${sun?.sign}, Луна в знаке ${moon?.sign}. Расчёт MVP использует детерминированную модель, которую можно заменить Swiss Ephemeris без изменения API.`,
-    positions,
-    aspects: aspects.slice(0, 8),
-  };
+  const paragraphs = [
+    sun && moon
+      ? `Солнце в ${sun.sign} (${sun.degree}°), Луна в ${moon.sign} (${moon.degree}°) — ядро личностного профиля для HR-контекста.`
+      : undefined,
+    `Преобладающая стихия: ${dominantElement}.`,
+    birthAccuracy === "unknown"
+      ? "Время рождения не указано: дома и асцендент не рассчитаны, опираемся на знаки планет."
+      : ascendant
+        ? `Асцендент: ${ascendant.sign} ${ascendant.degree}° (1 дом) — стиль входа в команду и первое впечатление.`
+        : "Дома рассчитаны по указанному времени рождения.",
+    aspects.length > 0
+      ? `Ключевые аспекты: ${aspectPreview}${aspects.length > 4 ? ` и ещё ${aspects.length - 4}` : ""}.`
+      : "Выраженных мажорных аспектов в пределах орбиса не найдено.",
+  ].filter((paragraph): paragraph is string => Boolean(paragraph));
+
+  return paragraphs.join("\n\n");
+}
+
+function countElements(positions: AnalyzeResponse["natalChart"]["positions"]) {
+  const counts = { Огонь: 0, Земля: 0, Воздух: 0, Вода: 0 };
+
+  for (const position of positions) {
+    if (position.body === "Асцендент") {
+      continue;
+    }
+
+    const element = ELEMENT_BY_SIGN[position.sign as (typeof SIGNS)[number]];
+    if (element) {
+      counts[element as keyof typeof counts] += 1;
+    }
+  }
+
+  return counts;
+}
+
+function pickDominantElement(counts: Record<string, number>): string {
+  const sorted = Object.entries(counts).sort((left, right) => right[1] - left[1]);
+  const [top, second] = sorted;
+
+  if (!top || top[1] === 0) {
+    return "баланс стихий";
+  }
+
+  if (second && top[1] === second[1]) {
+    return `${top[0]} и ${second[0]} (по ${top[1]} планет)`;
+  }
+
+  return `${top[0]} (${top[1]} из 10 планет)`;
 }
 
 export function getBirthTimeAccuracy(request: AnalyzeRequest): BirthTimeAccuracy {

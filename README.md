@@ -25,7 +25,7 @@ cp apps/backend/.env.example apps/backend/.env
 cp apps/frontend/.env.example apps/frontend/.env
 ```
 
-В `apps/backend/.env` можно добавить `GIGACHAT_CREDENTIALS`, `GIGACHAT_SCOPE` и `GIGACHAT_MODEL`. Во frontend кладите только публичный `VITE_API_URL`.
+В `apps/backend/.env` можно добавить `GIGACHAT_CREDENTIALS`, `GIGACHAT_SCOPE` и `GIGACHAT_MODEL`. Во frontend в dev `VITE_API_URL` можно не задавать — Vite проксирует `/api` на порт из `apps/backend/.env` (`PORT`). Если задаёте `VITE_API_URL` вручную, он должен совпадать с портом backend.
 
 Запустите backend и frontend в двух терминалах:
 

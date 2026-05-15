@@ -10,7 +10,7 @@ describe("AnalyzeRequestSchema", () => {
         birthDate: "1992-04-18",
         birthTime: "08:30",
         birthPlace: {
-          city: "Москва",
+          city: "Москва, Московская область",
           latitude: 55.7558,
           longitude: 37.6173,
           timezone: "Europe/Moscow",
@@ -36,5 +36,36 @@ describe("AnalyzeRequestSchema", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("returns russian messages for short vacancy description", () => {
+    const result = AnalyzeRequestSchema.safeParse({
+      consentAccepted: true,
+      candidate: {
+        fullName: "Иван Иванов",
+        birthDate: "1990-01-01",
+        birthPlace: {
+          city: "Москва, Московская область",
+          latitude: 55.7558,
+          longitude: 37.6173,
+          timezone: "Europe/Moscow",
+        },
+      },
+      vacancy: {
+        title: "Аналитик",
+        companyDescription: "Коротко",
+        jobDescription: "Тоже мало",
+      },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.map((issue) => issue.message);
+      expect(messages.some((message) => message.includes("компани"))).toBe(true);
+      expect(messages.some((message) => message.includes("ваканс"))).toBe(true);
+      expect(messages.some((message) => message.includes("Too small"))).toBe(
+        false,
+      );
+    }
   });
 });

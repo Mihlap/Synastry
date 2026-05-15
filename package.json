@@ -10,9 +10,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace @synastry/frontend",
-    "dev:frontend": "npm run dev --workspace @synastry/frontend",
-    "dev:backend": "npm run dev --workspace @synastry/backend",
+    "dev": "npm run dev:frontend",
+    "dev:frontend": "npm run build --workspace @synastry/contracts && npm run dev --workspace @synastry/frontend",
+    "dev:backend": "npm run build --workspace @synastry/contracts && npm run dev --workspace @synastry/backend",
     "build": "npm run build --workspace @synastry/contracts && npm run build --workspace @synastry/backend && npm run build --workspace @synastry/frontend",
     "typecheck": "npm run build --workspace @synastry/contracts && npm run typecheck --workspace @synastry/backend && npm run typecheck --workspace @synastry/frontend && npm run typecheck --workspace @synastry/contracts",
     "test": "npm run build --workspace @synastry/contracts && npm run test --workspace @synastry/contracts && npm run test --workspace @synastry/backend && npm run test --workspace @synastry/frontend",

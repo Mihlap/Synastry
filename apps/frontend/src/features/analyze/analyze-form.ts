@@ -7,7 +7,7 @@ export const defaultAnalyzeValues: AnalyzeRequest = {
     birthDate: "",
     birthTime: null,
     birthPlace: {
-      city: "Москва",
+      city: "Москва, Московская область",
       latitude: 55.7558,
       longitude: 37.6173,
       timezone: "Europe/Moscow",

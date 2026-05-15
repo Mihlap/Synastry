@@ -1,10 +1,8 @@
-import { Router } from "express";
+import type { FastifyPluginAsync } from "fastify";
 import { getAvailableProviders } from "../providers/registry.js";
 
-export const providersRouter = Router();
-
-providersRouter.get("/", async (_req, res, next) => {
-  try {
+export const providersRouter: FastifyPluginAsync = async (app) => {
+  app.get("/", async () => {
     const providers = await Promise.all(
       getAvailableProviders().map(async (provider) => ({
         id: provider.id,
@@ -13,8 +11,6 @@ providersRouter.get("/", async (_req, res, next) => {
       })),
     );
 
-    res.json({ providers });
-  } catch (error) {
-    next(error);
-  }
-});
+    return { providers };
+  });
+};

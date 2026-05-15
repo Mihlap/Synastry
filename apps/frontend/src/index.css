@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --font-main: "Raleway", Arial, sans-serif;
+  --font-accent: "Unbounded", "Raleway", Arial, sans-serif;
+  --font-ui: "Inter", Arial, sans-serif;
+
+  --color-ink: #1d2e43;
+  --color-muted: #566272;
+  --color-muted-light: #9b9c9e;
+  --color-paper: rgb(255 255 255 / 0.72);
+  --color-line: #ebecee;
+  --color-salmon: #ff7f6a;
+  --color-salmon-dark: #e86a55;
+  --color-blue: #75bbfd;
+  --color-blue-dark: #389fff;
+  --color-green: #90b734;
+  --color-purple: #6e5ca1;
+  --color-crimson: #b0244a;
+  --color-surface: #f6f6f6;
+
+  --shadow-panel: 0 22px 64px rgb(29 46 67 / 0.08);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply m-0 min-h-screen min-w-[320px] bg-surface font-main text-ink antialiased;
+    font-synthesis: none;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+  }
+
+  body::before {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    content: "";
+    background:
+      radial-gradient(circle at 15% 8%, rgb(255 127 106 / 0.2), transparent 22rem),
+      radial-gradient(circle at 82% 12%, rgb(117 187 253 / 0.24), transparent 24rem),
+      radial-gradient(circle at 88% 82%, rgb(110 92 161 / 0.12), transparent 22rem),
+      linear-gradient(221deg, rgb(255 203 193 / 0.13) -4%, rgb(117 187 253 / 0.12) 45%, rgb(246 246 246) 104%);
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+  }
+}

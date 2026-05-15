@@ -1,23 +1,24 @@
-import express from "express";
+import fastify from "fastify";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
-import { corsMiddleware, helmetMiddleware } from "./middleware/security.js";
+import { registerSecurityPlugins } from "./middleware/security.js";
 import { analyzeRouter } from "./routes/analyze.route.js";
 import { healthRouter } from "./routes/health.route.js";
 import { providersRouter } from "./routes/providers.route.js";
 
 export function createApp() {
-  const app = express();
+  const app = fastify({
+    bodyLimit: 1_048_576,
+    logger: false,
+  });
 
-  app.use(helmetMiddleware);
-  app.use(corsMiddleware);
-  app.use(express.json({ limit: "1mb" }));
+  registerSecurityPlugins(app);
 
-  app.use("/api/health", healthRouter);
-  app.use("/api/providers", providersRouter);
-  app.use("/api/analyze", analyzeRouter);
+  app.register(healthRouter, { prefix: "/api/health" });
+  app.register(providersRouter, { prefix: "/api/providers" });
+  app.register(analyzeRouter, { prefix: "/api/analyze" });
 
-  app.use(notFoundHandler);
-  app.use(errorHandler);
+  app.setNotFoundHandler(notFoundHandler);
+  app.setErrorHandler(errorHandler);
 
   return app;
 }

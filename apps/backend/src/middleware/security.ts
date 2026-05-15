@@ -1,34 +1,39 @@
-import cors from "cors";
-import rateLimit from "express-rate-limit";
-import helmet from "helmet";
+import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import rateLimit, { type RateLimitOptions } from "@fastify/rate-limit";
+import type { FastifyInstance } from "fastify";
 import { env } from "../config/env.js";
 
 const allowedOrigins = env.CORS_ORIGIN.split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-export const helmetMiddleware = helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-});
+export const analyzeRateLimitOptions: RateLimitOptions = {
+  max: env.RATE_LIMIT_MAX,
+  timeWindow: env.RATE_LIMIT_WINDOW_MS,
+};
 
-export const corsMiddleware = cors({
-  credentials: false,
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-      return;
-    }
+export function registerSecurityPlugins(app: FastifyInstance) {
+  app.register(helmet, {
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  });
 
-    callback(new Error("Not allowed by CORS"));
-  },
-});
+  app.register(cors, {
+    credentials: false,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
 
-export const analyzeRateLimit = rateLimit({
-  windowMs: env.RATE_LIMIT_WINDOW_MS,
-  limit: env.RATE_LIMIT_MAX,
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-  message: {
-    message: "Слишком много запросов. Подождите минуту и попробуйте снова.",
-  },
-});
+      callback(new Error("Not allowed by CORS"), false);
+    },
+  });
+
+  app.register(rateLimit, {
+    global: false,
+    errorResponseBuilder: () => ({
+      message: "Слишком много запросов. Подождите минуту и попробуйте снова.",
+    }),
+  });
+}

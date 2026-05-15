@@ -1,4 +1,3 @@
-import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app.js";
 
@@ -6,25 +5,35 @@ const app = createApp();
 
 describe("Synastry API", () => {
   it("returns health status", async () => {
-    const response = await request(app).get("/api/health").expect(200);
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/health",
+    });
 
-    expect(response.body.status).toBe("ok");
+    expect(response.statusCode).toBe(200);
+    expect(response.json().status).toBe("ok");
   });
 
   it("returns enabled providers without leaking secrets", async () => {
-    const response = await request(app).get("/api/providers").expect(200);
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/providers",
+    });
+    const body = response.json();
 
-    expect(response.body.providers[0]).toMatchObject({
+    expect(response.statusCode).toBe(200);
+    expect(body.providers[0]).toMatchObject({
       id: "gigachat",
       name: "GigaChat",
     });
-    expect(JSON.stringify(response.body)).not.toContain("SECRET");
+    expect(JSON.stringify(body)).not.toContain("SECRET");
   });
 
   it("analyzes a valid request through the local fallback when GigaChat secrets are absent", async () => {
-    const response = await request(app)
-      .post("/api/analyze")
-      .send({
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/analyze",
+      payload: {
         consentAccepted: true,
         candidate: {
           fullName: "Антон Петров",
@@ -44,20 +53,27 @@ describe("Synastry API", () => {
           jobDescription:
             "Нужен инженер, который умеет развивать интерфейсы, работать с React и обсуждать решения с продуктом.",
         },
-      })
-      .expect(200);
+      },
+    });
+    const body = response.json();
 
-    expect(response.body.compatibility.verdict).toBe("conditional");
-    expect(response.body.meta.provider).toBe("local");
-    expect(response.body.meta.birthTimeAccuracy).toBe("unknown");
+    expect(response.statusCode).toBe(200);
+    expect(body.compatibility.score).toBeGreaterThanOrEqual(35);
+    expect(body.compatibility.score).toBeLessThanOrEqual(94);
+    expect(body.natalChart.aspects.length).toBeGreaterThan(0);
+    expect(body.meta.provider).toBe("local");
+    expect(body.meta.birthTimeAccuracy).toBe("unknown");
   });
 
   it("rejects requests without personal data consent", async () => {
-    await request(app)
-      .post("/api/analyze")
-      .send({
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/analyze",
+      payload: {
         consentAccepted: false,
-      })
-      .expect(400);
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
   });
 });
