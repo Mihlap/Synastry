@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
   const backendPort = backendEnv.PORT || "3001";
 
   return {
-    base: process.env.GITHUB_PAGES === "true" ? "/Synastry/" : "/",
+    base: "/",
     plugins: [tailwindcss(), react()],
     server: {
       proxy: {
