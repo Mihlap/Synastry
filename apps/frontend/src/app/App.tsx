@@ -27,7 +27,7 @@ export function App() {
           />
           <span className={`${eyebrowClasses} mb-3.5`}>Для HR и рекрутеров</span>
           <h1 className="relative m-0 max-w-4xl font-accent text-[clamp(2.25rem,5vw,4rem)] leading-[1.12] font-light tracking-tight text-ink">
-            Точный выбор среди сильных
+            Правильный выбор
           </h1>
           <p className="relative mt-6 max-w-3xl font-main text-lg leading-relaxed text-muted">
             Профиль кандидата, культура компании и задачи роли — в одном отчёте.
