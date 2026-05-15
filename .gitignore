@@ -7,6 +7,9 @@ coverage/
 .turbo/
 *.tsbuildinfo
 
+# Documentation (local only)
+*.md
+
 # Secrets and local environment
 .env
 .env.local
