@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# Secrets and local environment
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+.env.backup
+.env.production.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,25 @@
+{
+  "name": "synastry",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HR compatibility analysis using natal chart context and pluggable AI providers.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @synastry/web",
+    "dev:api": "npm run dev --workspace @synastry/api",
+    "dev:web": "npm run dev --workspace @synastry/web",
+    "build": "npm run build --workspace @synastry/shared && npm run build --workspace @synastry/api && npm run build --workspace @synastry/web",
+    "typecheck": "npm run build --workspace @synastry/shared && npm run typecheck --workspace @synastry/api && npm run typecheck --workspace @synastry/web && npm run typecheck --workspace @synastry/shared",
+    "test": "npm run build --workspace @synastry/shared && npm run test --workspace @synastry/shared && npm run test --workspace @synastry/api && npm run test --workspace @synastry/web",
+    "test:run": "npm run build --workspace @synastry/shared && npm run test:run --workspace @synastry/shared && npm run test:run --workspace @synastry/api && npm run test:run --workspace @synastry/web",
+    "lint": "npm run lint --workspace @synastry/shared && npm run lint --workspace @synastry/api && npm run lint --workspace @synastry/web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
