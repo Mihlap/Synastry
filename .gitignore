@@ -7,8 +7,9 @@ coverage/
 .turbo/
 *.tsbuildinfo
 
-# Documentation (local only)
+# Documentation (local only, except project README)
 *.md
+!README.md
 
 # Secrets and local environment
 .env
