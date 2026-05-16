@@ -29,7 +29,7 @@ describe("Synastry API", () => {
     expect(JSON.stringify(body)).not.toContain("SECRET");
   });
 
-  it("analyzes a valid request through the local fallback when GigaChat secrets are absent", async () => {
+  it("rejects analyze requests when GigaChat secrets are absent", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/api/analyze",
@@ -57,12 +57,8 @@ describe("Synastry API", () => {
     });
     const body = response.json();
 
-    expect(response.statusCode).toBe(200);
-    expect(body.compatibility.score).toBeGreaterThanOrEqual(35);
-    expect(body.compatibility.score).toBeLessThanOrEqual(94);
-    expect(body.natalChart.aspects.length).toBeGreaterThan(0);
-    expect(body.meta.provider).toBe("local");
-    expect(body.meta.birthTimeAccuracy).toBe("unknown");
+    expect(response.statusCode).toBe(503);
+    expect(body.message).toContain("GigaChat");
   });
 
   it("rejects requests without personal data consent", async () => {

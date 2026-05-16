@@ -2,7 +2,19 @@
 
 Synastry — небольшое React-приложение для HR-анализа совместимости кандидата и вакансии. Пользователь заполняет данные кандидата и описание роли, а сервер строит базовую натальную карту и просит GigaChat подготовить аккуратный отчёт для HR.
 
-Ключи GigaChat живут только в backend-части. Если ключей нет, API использует локальный демо-анализ, чтобы проект всё равно можно было запустить и проверить.
+Ключи GigaChat живут только в backend-части. Если ключи не настроены или GigaChat недоступен, API возвращает понятную ошибку вместо демо-отчёта.
+
+## Стек технологий
+
+| Слой | Технологии |
+|------|------------|
+| **Репозиторий** | npm **workspaces**, **TypeScript** |
+| **Frontend** (`apps/frontend`) | **React** 19, **Vite**, **Tailwind CSS** 4, **React Router**, **Redux Toolkit** (в т.ч. RTK Query), **React Hook Form**, **Zod** |
+| **Backend** (`apps/backend`) | **Node.js** 20+, **Fastify**, **Zod**, натальная карта (**astronomy-engine**), провайдер ИИ **GigaChat** (SDK gigachat), **@fastify/cors** / **helmet** / **rate-limit** |
+| **Контракты** (`packages/contracts`) | **Zod**-схемы и типы API, общие для frontend и backend |
+| **Качество** | **Vitest**, **Testing Library** (frontend), **ESLint** |
+
+Описание репозитория на GitHub можно кратко оформить так: *React + Vite + RTK Query · Fastify · Zod · GigaChat · natal chart (astronomy-engine)*.
 
 ## Структура
 

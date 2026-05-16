@@ -54,7 +54,7 @@ describe("compatibility anchor", () => {
     expect(anchorA).not.toBe(anchorB);
   });
 
-  it("pulls generic 85 score toward anchor when verdict allows", () => {
+  it("keeps calculated score instead of generic model score", () => {
     const chart = buildNatalChart(sampleRequest);
     const anchor = computeCompatibilityAnchor(sampleRequest, chart);
 
@@ -69,12 +69,8 @@ describe("compatibility anchor", () => {
       anchor,
     );
 
-    if (Math.abs(85 - anchor) > 12) {
-      expect(harmonized.score).not.toBe(85);
-    }
-
-    expect(harmonized.score).toBeGreaterThanOrEqual(72);
-    expect(harmonized.score).toBeLessThanOrEqual(94);
+    expect(harmonized.score).toBe(anchor);
+    expect(harmonized.verdict).toBe(verdictFromScore(anchor));
   });
 
   it("maps score ranges to verdict", () => {

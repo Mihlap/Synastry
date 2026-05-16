@@ -2,11 +2,9 @@ import { enabledProviders, env } from "../config/env.js";
 import { AppError } from "../middleware/error-handler.js";
 import type { AIProvider } from "./ai-provider.interface.js";
 import { GigaChatProvider } from "./gigachat.provider.js";
-import { LocalAnalysisProvider } from "./local-analysis.provider.js";
 
 const allProviders = new Map<string, AIProvider>([
   ["gigachat", new GigaChatProvider()],
-  ["local", new LocalAnalysisProvider()],
 ]);
 
 export function getProvider(providerId = env.AI_PROVIDER): AIProvider {
@@ -23,8 +21,4 @@ export function getAvailableProviders(): AIProvider[] {
   return enabledProviders
     .map((providerId) => allProviders.get(providerId))
     .filter((provider): provider is AIProvider => Boolean(provider));
-}
-
-export function getFallbackProvider(): AIProvider {
-  return allProviders.get("local") ?? new LocalAnalysisProvider();
 }

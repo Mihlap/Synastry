@@ -13,12 +13,26 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: "/",
-    plugins: [tailwindcss(), react()],
+    plugins: [
+      tailwindcss(),
+      react(),
+      {
+        name: "synastry-log-api-proxy-target",
+        configureServer(server) {
+          server.httpServer?.once("listening", () => {
+            console.info(
+              `[synastry] vite proxy → http://127.0.0.1:${backendPort} (берёт apps/backend PORT из .env)`,
+            );
+          });
+        },
+      },
+    ],
     server: {
       proxy: {
         "/api": {
           target: `http://localhost:${backendPort}`,
           changeOrigin: true,
+          timeout: 0,
         },
       },
     },

@@ -15,6 +15,8 @@ const EnvSchema = z.object({
   GIGACHAT_SCOPE: z.string().default("GIGACHAT_API_PERS"),
   GIGACHAT_MODEL: z.string().default("GigaChat"),
   GIGACHAT_ALLOW_SELF_SIGNED: z.coerce.boolean().default(false),
+  GIGACHAT_TIMEOUT_SECONDS: z.coerce.number().positive().default(90),
+  ANALYZE_PIPELINE_TIMEOUT_MS: z.coerce.number().int().positive().default(180_000),
   AI_PROVIDER: z.string().default("gigachat"),
   AI_DEFAULT_MODEL: z.string().default("GigaChat"),
   ENABLED_PROVIDERS: z.string().default("gigachat"),

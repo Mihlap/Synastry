@@ -25,25 +25,33 @@ export function App() {
             aria-hidden="true"
             className="pointer-events-none absolute bottom-10 right-[18%] h-28 w-28 rounded-full border border-purple/20 bg-purple/10"
           />
-          <span className={`${eyebrowClasses} mb-3.5`}>Для HR и рекрутеров</span>
+          <span className={`${eyebrowClasses} mb-3.5`}>Для руководителей и HR</span>
           <h1 className="relative m-0 max-w-4xl font-accent text-[clamp(2.25rem,5vw,4rem)] leading-[1.12] font-light tracking-tight text-ink">
-            Правильный выбор
+            Проверь свой выбор
           </h1>
           <p className="relative mt-6 max-w-3xl font-main text-lg leading-relaxed text-muted">
-            Профиль кандидата, культура компании и задачи роли — в одном отчёте.
-            Понятно, впишется ли человек в команду, где он силён и о чём поговорить
-            на интервью.
+            О кандидате, о вашей команде и о том, что от него ждут на этой
+            должности — всё в одном отчёте. Сразу видно, подойдёт ли он
+            коллективу, в чём силён и о чём поговорить на собеседовании.
           </p>
           <div className="relative mt-8 flex flex-col items-start gap-2.5">
             <a
               className={`${primaryLinkClasses} w-fit`}
               href="#analysis"
-              onClick={() => setAnalyzeSessionKey((key) => key + 1)}
+              onClick={() => {
+                setAnalyzeSessionKey((key) => key + 1);
+                requestAnimationFrame(() => {
+                  document.getElementById("analysis")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                });
+              }}
             >
               Начать анализ
             </a>
             <p className="m-0 max-w-md font-main text-[0.8125rem] leading-snug text-muted">
-              При нажатии на кнопку — новая форма и новый отчёт.
+              Новая форма и новый отчёт; предыдущий запрос отменяется.
             </p>
           </div>
         </div>

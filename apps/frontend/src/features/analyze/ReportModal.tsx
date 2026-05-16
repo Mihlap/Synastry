@@ -8,6 +8,7 @@ type ReportModalProps = {
   open: boolean;
   loading: boolean;
   error: string | null;
+  hasSubmissionFailed?: boolean;
   result: AnalyzeResponse | null;
   candidateName: string;
   roleTitle: string;
@@ -18,18 +19,29 @@ export function ReportModal({
   open,
   loading,
   error,
+  hasSubmissionFailed = false,
   result,
   candidateName,
   roleTitle,
   onClose,
 }: ReportModalProps) {
+  const failureMessage =
+    typeof error === "string" && error.trim().length > 0
+      ? error.trim()
+      : "Не удалось получить отчёт. Попробуйте ещё раз.";
+
+  const showError = Boolean(hasSubmissionFailed) && !loading;
+  const showReport = Boolean(result) && !loading && !hasSubmissionFailed;
+  const showIdle =
+    !loading && !showError && !showReport;
+
   useEffect(() => {
     if (!open) {
       return;
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !loading) {
+      if (event.key === "Escape") {
         onClose();
       }
     };
@@ -42,7 +54,7 @@ export function ReportModal({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [loading, onClose, open]);
+  }, [onClose, open]);
 
   if (!open) {
     return null;
@@ -56,7 +68,6 @@ export function ReportModal({
       <button
         aria-label="Закрыть отчёт"
         className="absolute inset-0 bg-ink/45 backdrop-blur-sm"
-        disabled={loading}
         onClick={onClose}
         type="button"
       />
@@ -79,8 +90,13 @@ export function ReportModal({
               {candidateName}
             </h2>
             <p className="m-0 mt-1 truncate font-main text-sm text-muted">{roleTitle}</p>
+            {loading ? (
+              <p className="m-0 mt-3 font-main text-sm leading-snug text-muted" role="status">
+                Расчёт натальной карты и запрос текста отчёта — подождите, ниже появится результат.
+              </p>
+            ) : null}
           </div>
-          <Button disabled={loading} onClick={onClose} type="button" variant="secondary">
+          <Button onClick={onClose} type="button" variant="secondary">
             Закрыть
           </Button>
         </header>
@@ -95,28 +111,35 @@ export function ReportModal({
               <div className="space-y-1">
                 <p className="m-0 font-accent text-lg text-ink">Собираем отчёт</p>
                 <p className="m-0 font-main text-sm text-muted">
-                  Обычно это занимает до минуты
+                  Обычно 1–3 минуты (редко дольше).
                 </p>
               </div>
             </div>
           ) : null}
 
-          {!loading && error ? (
+          {showError ? (
             <div className="flex min-h-[280px] flex-col items-center justify-center gap-3 text-center">
               <p className="m-0 font-accent text-lg text-crimson">Не удалось получить отчёт</p>
-              <p className="m-0 max-w-md font-main text-sm leading-relaxed text-muted">{error}</p>
+              <p className="m-0 max-w-md font-main text-sm leading-relaxed text-muted">{failureMessage}</p>
               <p className="m-0 font-ui text-xs text-muted-light">
-                Запустите backend: npm run dev:backend
+                Запуск: npm run dev:backend из корня. В dev можно не задавать VITE_API_URL — см. сообщение справа
+                после ошибки.
               </p>
             </div>
           ) : null}
 
-          {!loading && !error && result ? (
-            <CompatibilityReport result={result} variant="modal" />
+          {showReport && result ? <CompatibilityReport result={result} variant="modal" /> : null}
+
+          {showIdle ? (
+            <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
+              <p className="m-0 font-main text-sm text-muted">
+                Отчёт ещё не загружен. Закройте окно и нажмите «Начать» в форме.
+              </p>
+            </div>
           ) : null}
         </div>
 
-        {!loading && !error && result ? (
+        {showReport && result ? (
           <footer className="shrink-0 border-t border-line px-5 py-4 sm:px-7">
             <ReportExportMenu
               candidateName={candidateName}

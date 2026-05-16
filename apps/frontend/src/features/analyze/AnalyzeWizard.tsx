@@ -1,6 +1,6 @@
 ﻿import { zodResolver } from "@hookform/resolvers/zod";
-import type { AnalyzeRequest, AnalyzeResponse } from "@synastry/contracts";
-import { useEffect, useState } from "react";
+import type { AnalyzeRequest } from "@synastry/contracts";
+import { useEffect, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { useAnalyzeMutation } from "../../shared/api/base-api";
 import { getAnalyzeErrorMessage } from "../../shared/lib/analyze-error";
@@ -33,21 +33,49 @@ const alertClasses =
 
 export function AnalyzeWizard() {
   const [step, setStep] = useState(0);
-  const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [
     analyze,
     {
+      data: analyzeResult,
       isLoading: analyzeIsSubmitting,
       isError: analyzeSubmitFailed,
+      isSuccess: analyzeSucceeded,
       error: analyzeSubmissionError,
       reset: resetAnalyzeMutation,
     },
   ] = useAnalyzeMutation();
+  const activeAnalyzeRequestRef = useRef<ReturnType<typeof analyze> | null>(null);
+
+  const result = analyzeResult ?? null;
 
   useEffect(() => {
-    resetAnalyzeMutation();
-  }, [resetAnalyzeMutation]);
+    return () => {
+      activeAnalyzeRequestRef.current?.abort();
+      activeAnalyzeRequestRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!analyzeIsSubmitting) {
+      return;
+    }
+
+    if (!window.matchMedia("(max-width: 980px)").matches) {
+      return;
+    }
+
+    document.getElementById("report-panel")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [analyzeIsSubmitting]);
+
+  useEffect(() => {
+    if (analyzeSucceeded && result) {
+      setReportOpen(true);
+    }
+  }, [analyzeSucceeded, result]);
   const {
     register,
     handleSubmit,
@@ -63,17 +91,31 @@ export function AnalyzeWizard() {
   const submit = handleSubmit(async (values) => {
     setReportOpen(true);
 
+    const request = analyze(values);
+    activeAnalyzeRequestRef.current = request;
+
     try {
-      const response = await analyze(values).unwrap();
-      setResult(response);
-    } catch {
-      // Ошибка отображается в модальном окне через мутацию анализа.
+      await request.unwrap();
+    } finally {
+      if (activeAnalyzeRequestRef.current === request) {
+        activeAnalyzeRequestRef.current = null;
+      }
     }
   });
 
   const submitError = analyzeSubmitFailed
     ? getAnalyzeErrorMessage(analyzeSubmissionError)
     : null;
+
+  const reportModalLoading = analyzeIsSubmitting;
+
+  const closeReport = () => {
+    if (analyzeIsSubmitting) {
+      activeAnalyzeRequestRef.current?.abort();
+      resetAnalyzeMutation();
+    }
+    setReportOpen(false);
+  };
 
   const goNext = async () => {
     if (step === 0) {
@@ -165,7 +207,7 @@ export function AnalyzeWizard() {
               <div className="flex flex-col gap-[18px]">
                 <InputField
                   label="ФИО кандидата"
-                  placeholder="Екатерина Антонова"
+                  placeholder="Антонова Екатерина Сергеевна"
                   maxLength={160}
                   error={errors.candidate?.fullName?.message}
                   {...register("candidate.fullName")}
@@ -189,7 +231,7 @@ export function AnalyzeWizard() {
                 </p>
                 <InputField
                   label="Город и регион рождения"
-                  placeholder="Москва, Московская область"
+                  placeholder="Подольск, Московская область"
                   hint="Укажите город и регион или область — так проще однозначно определить место для расчёта."
                   error={errors.candidate?.birthPlace?.city?.message}
                   {...register("candidate.birthPlace.city")}
@@ -201,7 +243,7 @@ export function AnalyzeWizard() {
               <div className="grid grid-cols-1 gap-4">
                 <InputField
                   label="Должность"
-                  placeholder="Frontend Engineer"
+                  placeholder="Например: менеджер проектов"
                   error={errors.vacancy?.title?.message}
                   {...register("vacancy.title")}
                 />
@@ -280,7 +322,7 @@ export function AnalyzeWizard() {
                   disabled={analyzeIsSubmitting}
                   type="submit"
                 >
-                  {analyzeIsSubmitting ? "Собираем отчёт..." : "Получить анализ"}
+                  {analyzeIsSubmitting ? "Считаем…" : "Начать"}
                 </Button>
               )}
             </div>
@@ -334,6 +376,48 @@ export function AnalyzeWizard() {
               </section>
             </div>
           </div>
+        ) : analyzeIsSubmitting ? (
+          <div
+            aria-busy="true"
+            aria-live="polite"
+            className="flex min-h-[420px] flex-1 flex-col items-center justify-center gap-6 px-2 py-12 text-center"
+          >
+            <div
+              aria-hidden="true"
+              className="h-12 w-12 animate-spin rounded-full border-[3px] border-line border-t-salmon"
+            />
+            <div className="flex max-w-md flex-col gap-2">
+              <span className={eyebrowClasses}>Идёт расчёт</span>
+              <h2 className="m-0 font-accent text-xl leading-snug tracking-tight text-ink sm:text-2xl">
+                Считаем натальную карту и текст отчёта
+              </h2>
+              <p className="m-0 font-main text-sm leading-relaxed text-muted">
+                Открой модальное окно — там тоже виден статус. Обычно до минуты; при
+                GigaChat возможна задержка.
+              </p>
+            </div>
+          </div>
+        ) : submitError ? (
+          <div className="flex min-h-[420px] flex-1 flex-col justify-center gap-4 py-10">
+            <span className={eyebrowClasses}>Ошибка</span>
+            <h2 className="m-0 font-accent text-xl leading-snug text-ink sm:text-2xl">
+              Отчёт не получился
+            </h2>
+            <p className={`m-0 max-w-xl font-main text-sm leading-relaxed ${alertClasses}`} role="alert">
+              {submitError}
+            </p>
+            <p className="m-0 max-w-xl font-main text-sm leading-relaxed text-muted">
+              Если <code className="rounded bg-black/8 px-1.5 py-0.5">VITE_API_URL</code> во frontend-проекте
+              пустой, запросы идут на Vite и проксируются на backend по{" "}
+              <code className="rounded bg-black/8 px-1.5 py-0.5">PORT</code> из{" "}
+              <code className="rounded bg-black/8 px-1.5 py-0.5">apps/backend/.env</code>. В консоли
+              dev-сервера будет строка{" "}
+              <span className="break-words font-mono text-[0.85rem] text-ink/90">
+                [synastry] vite proxy → …
+              </span>
+              .
+            </p>
+          </div>
         ) : (
           <div className="flex h-full flex-col gap-7">
             <div className="flex flex-col gap-3.5">
@@ -355,8 +439,9 @@ export function AnalyzeWizard() {
     <ReportModal
       candidateName={candidateName}
       error={submitError}
-      loading={analyzeIsSubmitting}
-      onClose={() => setReportOpen(false)}
+      hasSubmissionFailed={analyzeSubmitFailed}
+      loading={reportModalLoading}
+      onClose={closeReport}
       open={reportOpen}
       result={result}
       roleTitle={roleTitle}

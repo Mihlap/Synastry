@@ -19,6 +19,7 @@
     "@fastify/helmet": "^13.0.2",
     "@fastify/rate-limit": "^10.3.0",
     "@synastry/contracts": "0.1.0",
+    "astronomy-engine": "^2.1.19",
     "dotenv": "^17.2.3",
     "fastify": "^5.8.5",
     "gigachat": "^0.0.20",

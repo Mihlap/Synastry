@@ -1,3 +1,5 @@
+import type { Body as AstronomyBody } from "astronomy-engine";
+import { Astronomy } from "./astronomy-engine.js";
 import type {
   AnalyzeRequest,
   AnalyzeResponse,
@@ -19,18 +21,18 @@ const SIGNS = [
   "Рыбы",
 ] as const;
 
-const BODIES = [
-  "Солнце",
-  "Луна",
-  "Меркурий",
-  "Венера",
-  "Марс",
-  "Юпитер",
-  "Сатурн",
-  "Уран",
-  "Нептун",
-  "Плутон",
-] as const;
+const BODIES: ReadonlyArray<{ label: string; body: AstronomyBody }> = [
+  { label: "Солнце", body: "Sun" as AstronomyBody },
+  { label: "Луна", body: "Moon" as AstronomyBody },
+  { label: "Меркурий", body: "Mercury" as AstronomyBody },
+  { label: "Венера", body: "Venus" as AstronomyBody },
+  { label: "Марс", body: "Mars" as AstronomyBody },
+  { label: "Юпитер", body: "Jupiter" as AstronomyBody },
+  { label: "Сатурн", body: "Saturn" as AstronomyBody },
+  { label: "Уран", body: "Uranus" as AstronomyBody },
+  { label: "Нептун", body: "Neptune" as AstronomyBody },
+  { label: "Плутон", body: "Pluto" as AstronomyBody },
+];
 
 const ELEMENT_BY_SIGN: Record<(typeof SIGNS)[number], string> = {
   Овен: "Огонь",
@@ -59,26 +61,27 @@ export function buildNatalChart(
   request: AnalyzeRequest,
 ): AnalyzeResponse["natalChart"] {
   const birthAccuracy = getBirthTimeAccuracy(request);
-  const seed = hashCandidate(request);
-  const positions: AnalyzeResponse["natalChart"]["positions"] = BODIES.map((body, index) => {
-    const longitude = normalize(seed / (index + 3) + index * 37.9);
+  const birthDate = resolveBirthDate(request);
+  const ascendantLongitude =
+    birthAccuracy === "unknown" ? undefined : calculateAscendantLongitude(request, birthDate);
+  const positions: AnalyzeResponse["natalChart"]["positions"] = BODIES.map(({ label, body }) => {
+    const longitude = getEclipticLongitude(body, birthDate);
     return {
-      body,
-      sign: SIGNS[Math.floor(longitude / 30)] ?? "Овен",
-      degree: round(longitude % 30),
+      body: label,
+      sign: signFromLongitude(longitude),
+      degree: degreeInSign(longitude),
       house:
-        birthAccuracy === "unknown"
+        ascendantLongitude === undefined
           ? undefined
-          : ((Math.floor(normalize(longitude + seed / 13) / 30) % 12) + 1),
+          : wholeSignHouse(longitude, ascendantLongitude),
     };
   });
 
-  if (birthAccuracy !== "unknown") {
-    const ascLongitude = normalize(seed / 7 + 11.5);
+  if (ascendantLongitude !== undefined) {
     positions.push({
       body: "Асцендент",
-      sign: SIGNS[Math.floor(ascLongitude / 30)] ?? "Овен",
-      degree: round(ascLongitude % 30),
+      sign: signFromLongitude(ascendantLongitude),
+      degree: degreeInSign(ascendantLongitude),
       house: 1,
     });
   }
@@ -104,7 +107,7 @@ export function buildNatalChart(
   );
 
   return {
-    summary: buildNatalSummary(positions, aspects, birthAccuracy),
+    summary: buildNatalSummary(positions, aspects, birthAccuracy, birthDate),
     positions,
     aspects: aspects.slice(0, 10),
   };
@@ -114,6 +117,7 @@ function buildNatalSummary(
   positions: AnalyzeResponse["natalChart"]["positions"],
   aspects: AnalyzeResponse["natalChart"]["aspects"],
   birthAccuracy: BirthTimeAccuracy,
+  birthDate: Date,
 ): string {
   const sun = positions.find((position) => position.body === "Солнце");
   const moon = positions.find((position) => position.body === "Луна");
@@ -126,6 +130,7 @@ function buildNatalSummary(
     .join("; ");
 
   const paragraphs = [
+    `Расчёт выполнен по реальным геоцентрическим тропическим долготам планет на ${birthDate.toISOString()}.`,
     sun && moon
       ? `Солнце в ${sun.sign} (${sun.degree}°), Луна в ${moon.sign} (${moon.degree}°) — ядро личностного профиля для HR-контекста.`
       : undefined,
@@ -183,24 +188,103 @@ export function getBirthTimeAccuracy(request: AnalyzeRequest): BirthTimeAccuracy
   return "exact";
 }
 
-function hashCandidate(request: AnalyzeRequest): number {
-  const source = [
-    request.candidate.fullName,
-    request.candidate.birthDate,
-    request.candidate.birthTime ?? "12:00",
-    request.candidate.birthPlace.city,
-    request.candidate.birthPlace.latitude,
-    request.candidate.birthPlace.longitude,
-  ].join("|");
+function normalize(value: number): number {
+  return ((value % 360) + 360) % 360;
+}
 
-  return Array.from(source).reduce(
-    (acc, char) => (acc * 31 + char.charCodeAt(0)) % 360_000,
-    17,
+function resolveBirthDate(request: AnalyzeRequest): Date {
+  const birthTime = request.candidate.birthTime ?? "12:00";
+  return zonedDateTimeToUtc(
+    request.candidate.birthDate,
+    birthTime,
+    request.candidate.birthPlace.timezone,
   );
 }
 
-function normalize(value: number): number {
-  return ((value % 360) + 360) % 360;
+function getEclipticLongitude(body: AstronomyBody, date: Date): number {
+  if (body === "Moon") {
+    return normalize(Astronomy.EclipticGeoMoon(date).lon);
+  }
+
+  return normalize(Astronomy.Ecliptic(Astronomy.GeoVector(body, date, true)).elon);
+}
+
+function calculateAscendantLongitude(request: AnalyzeRequest, date: Date): number {
+  const latitude = clamp(request.candidate.birthPlace.latitude, -66.5, 66.5);
+  const localSiderealDegrees = normalize(
+    Astronomy.SiderealTime(date) * 15 + request.candidate.birthPlace.longitude,
+  );
+  const theta = toRadians(localSiderealDegrees);
+  const phi = toRadians(latitude);
+  const epsilon = toRadians(23.4392911);
+  const ascendant = Math.atan2(
+    -Math.cos(theta),
+    Math.sin(theta) * Math.cos(epsilon) + Math.tan(phi) * Math.sin(epsilon),
+  );
+
+  return normalize(toDegrees(ascendant));
+}
+
+function zonedDateTimeToUtc(date: string, time: string, timeZone: string): Date {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+
+  if (!year || !month || !day || hour === undefined || minute === undefined) {
+    return new Date(`${date}T${time}:00.000Z`);
+  }
+
+  let utcMs = Date.UTC(year, month - 1, day, hour, minute);
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const offsetMinutes = getTimeZoneOffsetMinutes(timeZone, new Date(utcMs));
+    utcMs = Date.UTC(year, month - 1, day, hour, minute) - offsetMinutes * 60_000;
+  }
+
+  return new Date(utcMs);
+}
+
+function getTimeZoneOffsetMinutes(timeZone: string, date: Date): number {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    });
+    const parts = Object.fromEntries(
+      formatter.formatToParts(date).map((part) => [part.type, part.value]),
+    );
+    const asUtc = Date.UTC(
+      Number(parts.year),
+      Number(parts.month) - 1,
+      Number(parts.day),
+      Number(parts.hour),
+      Number(parts.minute),
+      Number(parts.second),
+    );
+
+    return (asUtc - date.getTime()) / 60_000;
+  } catch {
+    return 0;
+  }
+}
+
+function signFromLongitude(longitude: number): (typeof SIGNS)[number] {
+  return SIGNS[Math.floor(normalize(longitude) / 30)] ?? "Овен";
+}
+
+function degreeInSign(longitude: number): number {
+  return round(normalize(longitude) % 30);
+}
+
+function wholeSignHouse(longitude: number, ascendantLongitude: number): number {
+  const signIndex = Math.floor(normalize(longitude) / 30);
+  const ascendantSignIndex = Math.floor(normalize(ascendantLongitude) / 30);
+  return ((signIndex - ascendantSignIndex + 12) % 12) + 1;
 }
 
 function signLongitude(sign: string, degree: number): number {
@@ -215,4 +299,16 @@ function shortestDistance(a: number, b: number): number {
 
 function round(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+function toRadians(value: number): number {
+  return (value * Math.PI) / 180;
+}
+
+function toDegrees(value: number): number {
+  return (value * 180) / Math.PI;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }

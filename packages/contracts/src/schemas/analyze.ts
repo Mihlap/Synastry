@@ -117,11 +117,11 @@ export const CompatibilitySchema = z.object({
   verdict: VerdictSchema,
   score: z.number().int().min(0).max(100).optional(),
   summary: z.string(),
-  pros: z.array(z.string()).min(1),
-  cons: z.array(z.string()).min(1),
+  pros: z.array(z.string().min(1)).min(5).max(7),
+  cons: z.array(z.string().min(1)).min(5).max(7),
   arguments: z.array(z.string()).optional(),
-  argumentsFor: z.array(z.string()).optional(),
-  argumentsAgainst: z.array(z.string()).optional(),
+  argumentsFor: z.array(z.string().min(1)).min(3).max(5).optional(),
+  argumentsAgainst: z.array(z.string().min(1)).min(3).max(5).optional(),
 });
 
 export const AnalyzeResponseSchema = z.object({

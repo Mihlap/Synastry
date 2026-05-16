@@ -24,6 +24,10 @@ export function errorHandler(
   _request: FastifyRequest,
   reply: FastifyReply,
 ) {
+  if (error instanceof AppError) {
+    return reply.status(error.status).send({ message: error.message });
+  }
+
   if (error instanceof ZodError) {
     return reply.status(400).send({
       message: "Проверьте заполнение формы",
@@ -36,11 +40,17 @@ export function errorHandler(
 
   const publicError = error as PublicError;
   const status = publicError.status ?? 500;
+  const fallbackMessage =
+    error instanceof Error && error.message.trim()
+      ? error.message
+      : "Сервис временно недоступен. Попробуйте позже.";
 
   return reply.status(status).send({
     message:
       status >= 500
-        ? "Сервис временно недоступен. Попробуйте позже."
+        ? process.env.NODE_ENV === "development"
+          ? fallbackMessage
+          : "Сервис временно недоступен. Попробуйте позже."
         : publicError.message,
   });
 }

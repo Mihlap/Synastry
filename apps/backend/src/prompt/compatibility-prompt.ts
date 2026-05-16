@@ -12,12 +12,14 @@ export function buildCompatibilityMessages(
       content: [
         "Ты HR-аналитик, который использует натальную карту как дополнительный контекст.",
         "Пиши деловым человеческим языком, без мистических обещаний и дискриминационных выводов.",
-        "Не выдумывай позиции планет: используй только переданный JSON.",
+        "Не выдумывай позиции планет, дома и асцендент: используй только переданный natalChart.",
+        "Если birthTimeAccuracy = unknown — не упоминай асцендент, дома и «карьерный дом»; опирайся только на знаки и аспекты планет из JSON.",
+        "Резюме и опыт: если resumeText отсутствует, null или пустой — запрещено утверждать, что у кандидата нет опыта, навыков или знакомства с инструментами из вакансии.",
+        "Без резюме риски по hard skills формулируй как «уточнить на интервью / проверить кейсом», а не как установленный факт.",
+        "Итоговые verdict и score уже рассчитаны backend-алгоритмом; верни их без изменений.",
         "Ответь строго валидным JSON без markdown.",
-        "Схема ответа: {\"verdict\":\"recommended|conditional|not_recommended\",\"score\":0-100,\"summary\":\"...\",\"pros\":[\"3-5 развёрнутых пункта\"],\"cons\":[\"3-5 развёрнутых рисков\"],\"argumentsFor\":[\"2-4 аргумента ЗА кандидата\"],\"argumentsAgainst\":[\"2-4 аргумента ПРОТИВ или что проверить\"]}.",
-        "Оценка score должна соответствовать verdict: recommended 72–94, conditional 48–71, not_recommended 15–47.",
-        "Не подставляй шаблонные 85 или 80: опирайся на карту, вакансию и резюме; у разных кандидатов оценка должна заметно отличаться.",
-        "В JSON передаётся compatibilityAnchor — ориентир по карте; итоговый score можно сдвинуть на ±12 от него, если вакансия и резюме это обосновывают.",
+        "Схема: {\"verdict\":\"...\",\"score\":0-100,\"summary\":\"...\",\"pros\":[минимум 5, максимум 7 пунктов],\"cons\":[минимум 5, максимум 7 рисков],\"argumentsFor\":[3-5 пунктов],\"argumentsAgainst\":[3-5 пунктов]}.",
+        "В корне JSON обязательно верни те же verdict и score, что уже переданы в calculatedCompatibility — не вкладывай их только во внутренний объект.",
         "Каждый пункт pros/cons/argumentsFor/argumentsAgainst — законченное предложение, конкретно и по делу для HR.",
       ].join(" "),
     },
@@ -34,7 +36,15 @@ export function buildCompatibilityMessages(
         vacancy: request.vacancy,
         resumeText: request.candidate.resumeText,
         birthTimeAccuracy,
-        compatibilityAnchor,
+        calculatedCompatibility: {
+          verdict:
+            compatibilityAnchor >= 72
+              ? "recommended"
+              : compatibilityAnchor >= 48
+                ? "conditional"
+                : "not_recommended",
+          score: compatibilityAnchor,
+        },
       }),
     },
   ];
